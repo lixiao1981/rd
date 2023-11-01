@@ -215,3 +215,54 @@ If you use a reference type, you always have to explicitly provide the data area
 An assignment or type conversion that changes the data location will always incur an automatic copy operation, while assignments inside the same data location only copy in some cases for storage types.
 
 
+### Data location and assignment behavior
+`Memory is a temporary data location that stores function parameters and local variables`
+`Storage is a permanent data location that stores the state of your contract.`
+Data locations are not only relevant for persistency of data, but also for the semantics of assignments:
+
+- Assignments between `storage` and `memory` (or from `calldata`) always create an independent copy.
+    
+- Assignments from `memory` to `memory` only create references. This means that changes to one memory variable are also visible in all other memory variables that refer to the same data.
+```
+Avoid assigning memory variables to other memory variables unless you are sure that you want to create a reference.
+If you need to create a copy of a memory variable, you can use the `abi.decode()` function.
+- Be careful when modifying memory variables that are passed as arguments to functions. Changes to these variables will be visible to the calling function.
+```
+- Assignments from `storage` to a **local** storage variable also only assign a reference.
+    
+- All other assignments to `storage` always copy. Examples for this case are assignments to state variables or to members of local variables of storage struct type, even if the local variable itself is just a reference.
+### Arrays
+Arrays can have a compile-time fixed size, or they can have a dynamic size.
+The type of an array of fixed size `k` and element type `T` is written as `T[k]`, and an array of dynamic size as `T[]`.
+`Indices are zero-based, and access is in the opposite direction of the declaration.`
+Array elements can be of any type, including mapping or struct.
+Dynamically-sized arrays can only be resized in storage. `In memory`, such arrays can be of arbitrary size but the size cannot be changed once an array is allocated.
+
+Variables of type `bytes` and `string` are special arrays. The `bytes` type is similar to `bytes1[]`, but it is packed tightly in calldata and memory. `string` is equal to `bytes` but does not allow length or index access.
+
+Solidity does not have string manipulation functions, but there are third-party string libraries. You can also compare two strings by their keccak256-hash using `keccak256(abi.encodePacked(s1)) == keccak256(abi.encodePacked(s2))` and concatenate two strings using `string.concat(s1, s2)`.
+
+```
+contract StringExample {
+    string public s = "Hello, world!";
+
+    function setSeventhByteToX() public {
+        bytes(s).length / bytes(s)[7] = 'x';
+    }
+
+    function printString() public view {
+        console.log(s);
+    }
+}
+
+```
+
+##### array member
+- length
+- push() and push (x)
+- pop()
+To use arrays of arrays in external (instead of public) functions, you need to activate ABI coder v2.
+
+#### Dangling References to Storage Array Elements
+ take care to avoid dangling references.
+ 
