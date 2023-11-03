@@ -265,4 +265,54 @@ To use arrays of arrays in external (instead of public) functions, you need to a
 
 #### Dangling References to Storage Array Elements
  take care to avoid dangling references.
- 
+ You need to take particular care when dealing with references to elements of bytes arrays, since a .push() on a bytes array may switch from short to long layout in storage.
+ ```
+ short -> long
+ long -> short
+ ```
+
+#### array slices
+Array slices are a view on a contiguous portion of an array. They are written as x[start:end], where start and end are expressions resulting in a uint256 type (or implicitly convertible to it). The first element of the slice is x[start] and the last element is x[end - 1].
+```
+As of now, array slices are only implemented for calldata arrays.
+
+```
+
+#### struts
+结构体是一种自定义的数据类型，它可以包含多个成员变量。结构体可以用于存储各种类型的数据，例如用户信息、产品信息等。
+
+结构体可以在映射和数组中使用，并且它们本身也可以包含映射和数组。这使得结构体非常灵活，可以用于构建各种复杂的数据结构。
+但是，结构体不能包含其自身类型的成员。这是因为结构体的大小必须是有限的。如果结构体包含其自身类型的成员，那么结构体的大小将是无限的，这会导致错误。
+
+在所有函数中，结构体类型都被分配给具有存储数据位置的局部变量。这不会复制结构体，而只是存储一个引用，以便对局部变量成员的赋值实际上会写入状态。
+
+在使用结构体时，需要注意以下几点：
+
+结构体的大小必须是有限的。
+结构体不能包含其自身类型的成员。
+在函数中，结构体类型通常被分配给具有存储数据位置的局部变量。
+也可以直接访问结构体的成员，而无需将其分配给局部变量。
+
+
+```
+Until Solidity 0.7.0, memory-structs containing members of storage-only types (e.g. mappings) were allowed and assignments like campaigns[campaignID] = Campaign(beneficiary, goal, 0, 0) in the example above would work and just silently skip those members.
+
+
+```
+在 Solidity 中，结构体类型可以包含两种类型的成员：存储类型成员和内存类型成员。存储类型成员的值存储在合约的存储中，内存类型成员的值存储在函数调用期间使用的内存中。
+
+在 Solidity 0.7.0 之前，如果将一个包含存储类型成员的结构体分配给一个内存变量，那么对该内存变量的赋值操作将会忽略存储类型成员。这意味着，即使您修改了内存变量的值，存储类型成员的值也不会被更新。
+如果攻击者能够控制一个包含存储类型成员的结构体，那么他们可以通过修改内存变量的值来修改存储类型成员的值。这可能导致安全漏洞。例如，假设您有一个合约，其中 balance 成员存储了用户的余额。如果攻击者能够控制一个包含 balance 成员的结构体，那么他们可以通过修改内存变量的 balance 成员来盗取用户的资金。
+
+
+
+#### mapping type
+Mapping types use the syntax mapping(KeyType KeyName? => ValueType ValueName?) and variables of mapping type are declared using the syntax mapping(KeyType KeyName? => ValueType ValueName?) VariableName.
+The KeyType can be any built-in value type, bytes, string, or any contract or enum type. 
+
+`Other user-defined or complex types, such as mappings, structs or array types are not allowed. `
+
+ValueType can be any type, including mappings, arrays and structs. KeyName and ValueName are optional (so mapping(KeyType => ValueType) works as well) and can be any valid identifier that is not a type
+
+##### mapping & hashtables
+
