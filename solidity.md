@@ -314,5 +314,25 @@ The KeyType can be any built-in value type, bytes, string, or any contract or en
 
 ValueType can be any type, including mappings, arrays and structs. KeyName and ValueName are optional (so mapping(KeyType => ValueType) works as well) and can be any valid identifier that is not a type
 
-##### mapping & hashtables
+### Ternary Operator
+The ternary operator in Solidity is a `conditional` operator that takes three operands: a `condition`, an expression to execute if the condition is true, and an expression to execute if the condition is false.
+
+condition ? expression1 : expression2
+
+### compound and Increment/Decrement Operators
+
+- a+=e a=a+e
+- a++ and a-- are equivalent to a += 1 / a -= 1
+
+
+### delete
+
+- delete a = a = 0;
+- delete a[x];
+- delete struts
+- delete mapping
+这是因为 delete 操作符无法知道映射 myMapping 中的键为 1 的元素存储在哪个存储槽中。因此，delete 操作符对映射没有影响。
+如果要删除映射中的元素，可以使用 mapping.remove() 函数。mapping.remove() 函数会从映射中删除指定的键和值。
+
+如果删除一个 struct，则会重置所有非mapping，并递归遍历成员（除非它们是映射）。但是，可以删除单个键及其映射到的值：如果 a 是一个映射，则 delete a[x] 将删除存储在 x 处的值。
 
