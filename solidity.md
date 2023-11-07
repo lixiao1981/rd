@@ -336,3 +336,49 @@ condition ? expression1 : expression2
 
 如果删除一个 struct，则会重置所有非mapping，并递归遍历成员（除非它们是映射）。但是，可以删除单个键及其映射到的值：如果 a 是一个映射，则 delete a[x] 将删除存储在 x 处的值。
 
+以下是一些使用 delete 操作符时需要注意的安全问题：
+
+- 请注意 delete 操作符的行为类似于对变量的赋值。如果您删除的是引用变量，则它将仅重置引用变量本身，而不会重置其先前引用的值。
+- 请避免使用 delete 操作符来重置存储槽中的值。如果您需要重置存储槽中的值，请使用其他方法，例如将存储槽中的值设置为默认值。
+
+### Implicit Conversions
+
+- uint8 is convertible to uint16 and int128 to int256.but int8 is not convertible to uint256, because uint256 cannot hold values such as -1.
+- 从小到大（从低到高）：uint256 可以隐式转换为 uint512、int256 等；address 可以隐式转换为 address payable；
+- 从精度低到精度高：uint 可以隐式转换为 int；
+- 从无符号到有符号：uint 可以隐式转换为 int；
+- 从数值到布尔：0 可以隐式转换为 false，非 0 可以隐式转换为 true；
+- 从布尔到数值：true 可以隐式转换为 1，false 可以隐式转换为 0；
+- 从字符串到数值：字符串可以隐式转换为数值，但前提是字符串可以转换为有效的数值；
+- 从数值到字符串：数值可以隐式转换为字符串。
+
+需要注意的是，隐式转换可能会导致精度损失。例如，uint8 可以隐式转换为 uint256，但在这种情况下，uint8 的值会被截断。
+
+### Explicit Conversions
+- int y = -3;uint x = int(x);
+- uint32 a = 0x12345678;uint16 b = uint16(a); // b will be 0x5678 now
+- uint16 a = 0x1234;uint32 b = uint32(a); // b will be 0x00001234 now
+- bytes2 a = 0x1234;bytes1 b = bytes1(a); // b will be 0x12
+- bytes2 a = 0x1234;bytes4 b = bytes4(a); // b will be 0x12340000
+- bytes2 a = 0x1234;uint32 b = uint16(a); // b will be 0x00001234
+- uint32 c = uint32(bytes4(a)); // c will be 0x12340000
+- uint8 d = uint8(uint16(a)); // d will be 0x34
+- uint8 e = uint8(bytes1(a)); // e will be 0x12
+
+```
+// SPDX-License-Identifier: GPL-3.0
+pragma solidity ^0.8.5;
+
+contract C {
+    bytes s = "abcdefgh";
+    function f(bytes calldata c, bytes memory m) public view returns (bytes16, bytes3) {
+        require(c.length == 16, "");
+        bytes16 b = bytes16(m);  // if length of m is greater than 16, truncation will happen
+        b = bytes16(s);  // padded on the right, so result is "abcdefgh\0\0\0\0\0\0\0\0"
+        bytes3 b1 = bytes3(s); // truncated, b1 equals to "abc"
+        b = bytes16(c[:8]);  // also padded with zeros
+        return (b, b1);
+    }
+}
+```
+
